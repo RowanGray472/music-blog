@@ -1,0 +1,117 @@
+/* Reset default styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Set a background color and font for the whole page */
+body {
+    font-family: 'Helvetica Neue', sans-serif;
+    background-color: #111;  /* Nearly black background */
+    color: #fff;  /* White text */
+    line-height: 1.6;
+    padding: 40px 20px;
+    font-size: 1rem;
+}
+
+/* Container for page content */
+.container {
+    width: 80%;
+    margin: 0 auto;
+}
+
+/* Heading styles */
+h1 {
+    color: #F0E5D8;  /* Light beige */
+    font-size: 3rem;
+    font-weight: 500;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+/* Styling for paragraphs and other text */
+p {
+    color: #ddd;  /* Light gray text */
+    font-size: 1.2rem;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Style for buttons */
+button {
+    padding: 12px 24px;
+    background-color: #F0E5D8;  /* Light beige */
+    color: #111;  /* Black text */
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    font-weight: 600;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin-top: 20px;
+}
+
+button:hover {
+    background-color: #e0d0b8;  /* Slightly darker beige */
+    transform: scale(1.05);  /* Slight scale on hover */
+}
+
+/* List styling for subscribers */
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+li {
+    background-color: #1f1f1f;  /* Dark gray background for each list item */
+    color: #F0E5D8;  /* Light beige text */
+    padding: 18px 20px;
+    margin: 10px 0;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+li:hover {
+    background-color: #333;  /* Slightly lighter dark gray */
+    transform: scale(1.03);
+}
+
+/* Form inputs and textareas */
+input, textarea {
+    background-color: #333;  /* Dark background for inputs */
+    color: #F0E5D8;  /* Light beige text */
+    border: 2px solid #444;
+    border-radius: 8px;
+    padding: 10px;
+    width: 100%;
+    font-size: 1rem;
+    margin-bottom: 20px;
+}
+
+input:focus, textarea:focus {
+    outline: none;
+    border-color: #F0E5D8;  /* Light beige border on focus */
+}
+
+/* Header and footer styling */
+header, footer {
+    text-align: center;
+    padding: 20px;
+    background-color: #111;
+    color: #ddd;
+    font-size: 1rem;
+    border-top: 1px solid #333;
+}
+
+footer {
+    font-size: 0.9rem;
+    margin-top: 40px;
+}
+
+/* Add some space for page footer */
+footer p {
+    margin-top: 10px;
+}
+

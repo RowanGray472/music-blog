@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Blog</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>ρ does music</h1>
+        <p>to address the creative imperative</p>
+
+        <div class="video-container">
+            {% for video in videos %}
+                <div class="video">
+                    <iframe width="560" height="315" src="https://www.youtube.com/embed/{{ video.video_url.split('v=')[1] }}" frameborder="0" allowfullscreen></iframe>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="subscribe-section">
+            <a href="/subscribe">
+                <button>subscribe to the email list</button>
+            </a>
+        </div>
+</body>
+</html>
+
