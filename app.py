@@ -7,13 +7,8 @@ import os
 load_dotenv()
 
 app = Flask(__name__)
-# Check if the app is running on Heroku
-if os.getenv('DATABASE_URL'):
-    # Use the DATABASE_URL provided by Heroku for PostgreSQL
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
-else:
-    # Use SQLite locally for development
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///local.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///local.db')
+
 
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')  # Use secret key from .env file
 db = SQLAlchemy(app)
