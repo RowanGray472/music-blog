@@ -126,5 +126,6 @@ if __name__ == '__main__':
     # Run the app and create tables on first run
     with app.app_context():
         db.create_all()
-    app.run()
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)), debug=True)
+
 
