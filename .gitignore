@@ -1,4 +1,7 @@
 .env
-__pycache__
 instance/
 *.swp
+data/*.json
+__pycache__/
+*.pyc
+env/

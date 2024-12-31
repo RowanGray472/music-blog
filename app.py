@@ -1,131 +1,132 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
-from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
 import os
+import json
+from typing import List, Dict
 
 # Load environment variables from .env file
 load_dotenv()
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///local.db')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
-print("DATABASE_URL:", os.getenv('DATABASE_URL'))
+# File paths for our JSON storage
+VIDEOS_FILE = 'data/videos.json'
+SUBSCRIBERS_FILE = 'data/subscribers.json'
 
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')  # Use secret key from .env file
-db = SQLAlchemy(app)
+# Ensure data directory exists
+os.makedirs('data', exist_ok=True)
 
-# Define the Video model
-class Video(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    caption = db.Column(db.String(120), nullable=False)
-    video_url = db.Column(db.String(200), nullable=False)
+def load_json_file(filepath: str) -> List[Dict]:
+    """Load data from a JSON file. If file doesn't exist, return empty list."""
+    try:
+        with open(filepath, 'r') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
 
-    def __repr__(self):
-        return f'<Video {self.caption}>'
+def save_json_file(filepath: str, data: List[Dict]):
+    """Save data to a JSON file."""
+    with open(filepath, 'w') as f:
+        json.dump(data, f, indent=2)
 
-# Define the Subscriber model to store email addresses
-class Subscriber(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True, nullable=False)
+# Video functions
+def get_all_videos():
+    return load_json_file(VIDEOS_FILE)
 
-    def __repr__(self):
-        return f'<Subscriber {self.email}>'
+def add_video(caption: str, video_url: str):
+    videos = get_all_videos()
+    # Generate a new ID
+    new_id = max([video.get('id', 0) for video in videos], default=0) + 1
+    videos.append({
+        'id': new_id,
+        'caption': caption,
+        'video_url': video_url
+    })
+    save_json_file(VIDEOS_FILE, videos)
+
+def delete_video(video_id: int):
+    videos = get_all_videos()
+    videos = [v for v in videos if v.get('id') != video_id]
+    save_json_file(VIDEOS_FILE, videos)
+
+# Subscriber functions
+def get_all_subscribers():
+    return load_json_file(SUBSCRIBERS_FILE)
+
+def add_subscriber(email: str) -> bool:
+    subscribers = get_all_subscribers()
+    # Check if email already exists
+    if any(sub['email'] == email for sub in subscribers):
+        return False
+    
+    subscribers.append({
+        'id': len(subscribers) + 1,
+        'email': email
+    })
+    save_json_file(SUBSCRIBERS_FILE, subscribers)
+    return True
 
 @app.route('/')
 def index():
-    videos = Video.query.all()  # Retrieve all video records from the database
+    videos = get_all_videos()
     return render_template('index.html', videos=videos)
 
-
-# Simple login route
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
         
-        # Compare entered credentials with stored credentials from the .env file
         if username == os.getenv('USERNAME') and password == os.getenv('PASSWORD'):
-            session['user_id'] = username  # Store the session
+            session['user_id'] = username
             flash('Logged in successfully!', 'success')
-            return redirect(url_for('add_video'))  # Redirect to the add_video page
+            return redirect(url_for('add_video_route'))  # Changed from 'add_video' to 'add_video_route'
         else:
             flash('Login failed. Check your username and/or password.', 'error')
 
     return render_template('login.html')
 
-# Add or Delete Video page
 @app.route('/add_video', methods=['GET', 'POST'])
-def add_video():
-    # Check if the user is logged in by checking the session
+def add_video_route():
     if 'user_id' not in session:
         flash('You must be logged in to access this page.', 'error')
-        return redirect(url_for('login'))  # Redirect to login page if not logged in
+        return redirect(url_for('login'))
 
     if request.method == 'POST':
         if 'add_video' in request.form:
-            # Add video
             caption = request.form['caption']
             video_url = request.form['video_url']
-            
-            new_video = Video(caption=caption, video_url=video_url)
-            db.session.add(new_video)
-            db.session.commit()
-
+            add_video(caption, video_url)
             flash('Video added successfully!', 'success')
 
         elif 'delete_video' in request.form:
-            # Delete video
-            video_id = request.form['video_id']
-            video = Video.query.get_or_404(video_id)
-            db.session.delete(video)
-            db.session.commit()
-
+            video_id = int(request.form['video_id'])
+            delete_video(video_id)
             flash('Video deleted successfully!', 'success')
 
-        return redirect(url_for('add_video'))  # After action, reload the page
+        return redirect(url_for('add_video_route'))
 
-    # Fetch all videos for display and deletion
-    videos = Video.query.all()
+    videos = get_all_videos()
     return render_template('add_video.html', videos=videos)
 
-# Subscribe route
 @app.route('/subscribe', methods=['GET', 'POST'])
 def subscribe():
     if request.method == 'POST':
         email = request.form['email']
-        
-        # Check if the email is already in the database
-        existing_subscriber = Subscriber.query.filter_by(email=email).first()
-        if existing_subscriber:
-            flash('This email is already subscribed!', 'error')
-        else:
-            # Add new subscriber to the database
-            new_subscriber = Subscriber(email=email)
-            db.session.add(new_subscriber)
-            db.session.commit()
+        if add_subscriber(email):
             flash(f'Successfully subscribed {email} to the email list!', 'success')
-
-        return redirect(url_for('index'))  # Redirect back to the index page
+        else:
+            flash('This email is already subscribed!', 'error')
+        return redirect(url_for('index'))
 
     return render_template('subscribe.html')
 
-# Route to display all subscribers' emails
 @app.route('/subscribers')
 def show_subscribers():
-    # Fetch all subscribers from the database
-    subscribers = Subscriber.query.all()
-
-    # Extract the email addresses for easy display
-    emails = [subscriber.email for subscriber in subscribers]
-
-    # Return the emails as a response (you can customize the display here)
+    subscribers = get_all_subscribers()
+    emails = [sub['email'] for sub in subscribers]
     return render_template('subscribers.html', emails=emails)
 
 if __name__ == '__main__':
-    # Run the app and create tables on first run
-    with app.app_context():
-        db.create_all()
-    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)), debug=True)
-
-
+    app.run()
